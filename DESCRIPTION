@@ -1,0 +1,14 @@
+Package: STAT302package
+Title: Project 3 package for stat302
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Yi",
+           family = "Sun",
+           role = c("aut", "cre"),
+           email = "suny93@uw.edu")
+Description: This is a project 3 package for stat302.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
