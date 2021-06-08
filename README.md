@@ -16,7 +16,7 @@ You can install the package through Github using :
 devtools::install_github("yi-sun01/STAT302package")
 ```
 
-To view the vignette:
+In order to  view the vignette:
 
 ``` r
 devtools::install_github("yi-sun01/STAT302package", build_vignette = TRUE, build_opts = c())
