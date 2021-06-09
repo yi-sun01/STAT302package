@@ -25,4 +25,5 @@ Imports:
     tibble,
     knitr,
     magrittr,
-    kableExtra
+    kableExtra,
+    randomForest

@@ -3,5 +3,6 @@
 export("%>%")
 export(my_knn_cv)
 export(my_pow)
+export(my_rf_cv)
 importFrom(magrittr,"%>%")
 importFrom(tibble,tibble)
