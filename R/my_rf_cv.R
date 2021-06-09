@@ -52,5 +52,6 @@ my_rf_cv <- function(k) {
     pred[i] <- mean((body_mass_test - PREDICTIONS)^2)
 
   }
+
   return(sum(pred) / k)
 }
