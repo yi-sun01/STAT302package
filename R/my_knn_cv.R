@@ -10,7 +10,7 @@
 #' @param k_cv Integer representing the number of folds.
 #' @keywords prediction
 #'
-#' @return The training misclassification rate and the CV misclassification rate.
+#' @return A table of the training misclassification rate and the CV misclassification rate.
 #'
 #' @examples
 #' penguins_01 <- na.omit(my_penguins)
@@ -21,8 +21,10 @@
 #' @export
 my_knn_cv <- function(train, cl, k_nn, k_cv) {
 
+  # initialize a vector to store CV miss-classification rate
   final_cv_err <- base::rep(NA, k_nn)
 
+  # initialize a vector to store training miss-classification rate
   final_train_err <- base::rep(NA, k_nn)
 
   for (j in 1:k_nn) {
@@ -65,23 +67,22 @@ my_knn_cv <- function(train, cl, k_nn, k_cv) {
     # as both the training and the test data
     class <- class::knn(train = train, test = train, cl = cl, k = j)
 
+    # compute the training miss-classification rate
     train_err <- mean(class != cl)
 
-
+    # store the results in vectors
     final_cv_err[j] <- cv_err
     final_train_err[j] <- train_err
 
   }
 
 
-  # store class and cv_error as a list
-  #final_output <- list("training error" = final_train_err, "cv_error" = final_cv_err)
+  # create a vector represents each k_nn value
   knn_name <- c(1:10)
 
   # create a data frame in order to make a table
   my_df <- data.frame(knn_name, final_train_err, final_cv_err)
-  #rownames(my_df) <- c("1-nearest neighbor", "5_nearest neighbors")
-  #colnames(my_df) <- c("cv_error", "training_set_error")
+
 
   # return the output of the function
   return(kableExtra::kable_styling(knitr::kable(my_df)))

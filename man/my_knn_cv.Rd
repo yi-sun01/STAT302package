@@ -16,7 +16,7 @@ my_knn_cv(train, cl, k_nn, k_cv)
 \item{k_cv}{Integer representing the number of folds.}
 }
 \value{
-The training misclassification rate and the CV misclassification rate.
+A table of the training misclassification rate and the CV misclassification rate.
 }
 \description{
 This function performs a k-neareast neighbors cross-validation.
