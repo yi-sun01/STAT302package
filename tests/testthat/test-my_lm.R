@@ -16,6 +16,7 @@ rownames(matrix1) <- c("(Intercept)", "gdpPercap", "continentAmericas",
 #matrix1 <- as.data.frame(matrix1)
 
 
+
 test_that("my_lm works correctly", {
   expect_equal(my_lm(lifeExp ~ gdpPercap + continent, my_gapminder), matrix1)
 })
