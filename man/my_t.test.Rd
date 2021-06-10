@@ -26,3 +26,4 @@ lifeExp <- my_gapminder$lifeExp
 my_t.test(lifeExp, "two.sided", 60)
 
 }
+\keyword{inference}

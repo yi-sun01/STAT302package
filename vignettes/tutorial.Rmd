@@ -1,6 +1,6 @@
 ---
 title: "Project 3: STAT302package Tutorial"
-author: "Yi Sun"
+author: "Yi Sun, Yuxin Huang"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{STAT302package Tutorial}
@@ -10,11 +10,219 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
+  fig.width = 6, 
+  fig.height = 5, 
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
+
 ```{r setup}
 library(STAT302package)
+data("my_penguins")
+set.seed(302)
 ```
+
+## 4.Tutorial for my_knn_cv
+
+
+We will be using "my_penguins" data and the function my_knn_cv() to perform 
+k-nearest neighbor cross-validation in this tutorial.
+Our goal is to make predictions of the output class species using four covariates 
+bill_length_mm, bill_depth_mm, flipper_length_mm, and body_mass_g. For the code chunk
+below, we will be using a 5-fold cross validation with k_nn being from 1 to 10.
+
+A k-fold corss-validation is to split data into k groups(folds), use 1 fold as
+the training data, use the rest of folds as the test data, and use the test
+data to make predictions. Sometimes we would swithc which fold is the test data and
+keep repeating the above process until every fold has been the test data.
+<br>
+```{r}
+# filter my_penguins data
+# omit NA values
+penguins_01 <- na.omit(my_penguins)
+# extract "species" from penguins_01 
+species_outcome <- dplyr::pull(penguins_01, var = "species")
+# only keeps the four covariates we want in the data set :
+# bill_length_mm, bill_depth_mm, flipper_length_mm, and body_mass_g
+penguins_01 <- dplyr::select(penguins_01, 3:6)
+
+# initialize a vector to store CV miss-classification rate
+cv_err <- base::rep(NA, 10)
+
+# initialize a vector to store training miss-classification rate
+train_err <- base::rep(NA, 10)
+  
+for (i in 1:10) {
+  # compute and store the CV error
+  result <- STAT302package::my_knn_cv(penguins_01, species_outcome, i, 5)
+  cv_err[i] <- result[["cv_error"]]
+  # compute and store the training error
+  train_err[i] <- mean(result[["class"]] != species_outcome)
+}
+
+# create a data frame in order to make a table
+knn_value <- c(1:10)
+my_df <- data.frame(knn_value, train_err, cv_err)
+#rownames(my_df) <- c("1-nearest neighbor", "5_nearest neighbors")
+colnames(my_df) <- c("k_nn", "training error", "CV error")
+
+# create the table with styling
+kableExtra::kable_styling(knitr::kable(my_df))
+  
+```
+
+<br>
+
+Based on training missclassification rates, I would chosee k_nn = 1 because it has the
+smallest training missclassification rate. Based on CV missclassification rates, I would choose
+k_nn = 1 as well because it has the smallest missclassification rate. In practice, I would
+choose the model with k_nn = 1 because it has both the smallest training missclassification rate and
+the smallest CV missclassification rate.
+
+<br>
+
+## 5.Tutorial for my_rf_cv
+
+
+We will be using the function my_rf_cv to perform random forest cross-validation
+in this tutorial. Our goal is to make predictions of body_mass_g using covariates bill_length_mm, bill_depth_mm, and flipper_length_mm. We choose three values for k: 2, 5, 10. For each
+value of k, we will perform the random forest cross-validation 30 times and keep track
+of the CV estimated MSE for each iteration.
+<br>
+```{r, fig.show = "hold"}
+# the values of k
+k_value <- c(2, 5, 10)
+
+# create a list in advance, to keep track of the CV MSE
+output_rf_cv <- list()
+
+for (i in 1:length(k_value)) {
+  # keep track of MSE for each iteration of the total 30 iterations
+  MSE <- c(1:30)
+  
+  for (j in 1:30) {
+    
+    # use my_rf_cv to calculate the MSE
+    MSE[j] <- STAT302package::my_rf_cv(k_value[i])
+    
+  }
+  
+  # store the MSE in the list
+  output_rf_cv[[i]] <- MSE
+ 
+}
+
+# a vector of the average CV estimates for each k
+mean_MSE <- c(mean(output_rf_cv[[1]]), mean(output_rf_cv[[2]]), mean(output_rf_cv[[3]]))
+# a vector of the standard deviation of the CV estimates across k                  
+sd_MSE <- c(sd(output_rf_cv[[1]]), sd(output_rf_cv[[2]]), sd(output_rf_cv[[3]]))
+                                       
+# create a data frame in order to build a table
+my_df_rf <- data.frame(mean_MSE, sd_MSE)
+rownames(my_df_rf) <- c("k = 2", "k = 5", "k = 10")
+colnames(my_df_rf) <- c("mean of MSE", "standard deviation")
+
+# create a table as the final output
+kableExtra::kable_styling(knitr::kable(my_df_rf))
+
+```
+
+<br>
+
+From the tabe above, we can see that both the means of CV MSE and the standard deviations of CV MSE
+decrease as the value of k increases. This is because when the value of k increases, our predictions get 
+more accurate and the test errors decreases. Therefore, CV MSE minimized at k = 10.
+
+<br>
+
+```{r, fig.show = "hold"}
+
+# create a vector representing the 30 iterations
+iteration <-  cut(c(1:30), breaks = c(0, 10, 20, 30), 
+                    labels = c("0-10", "10-20", "20-30"))
+
+# create a data frame in order to make a box-plot of k = 2
+graph1_data <- data.frame(output_rf_cv[[1]], iteration)
+colnames(graph1_data) <- c("MSE", "iteration")
+# plot the "MSE vs. Iterations" graph for k = 2
+ggplot2::ggplot(data = graph1_data, 
+       ggplot2::aes(x = iteration, y = MSE, group = iteration)) +
+  
+    ggplot2::geom_boxplot(size = 1, color = "cornflowerblue" ) +
+    
+    # set up the title of the graph
+    # lable the two axes
+    ggplot2::labs(title = "Estemiated CV MSE when k = 2",
+         x = "Number of Iterations", y = "MSE") +
+    
+    # change background color to black and white
+    ggplot2::theme_bw(base_size = 20) +
+  
+    # adjusting the size of the main title and its position
+    # adjust the size of titles of axes
+    ggplot2::theme(plot.title = ggplot2::element_text(size=20, hjust = 0.5), 
+          axis.title.x = ggplot2::element_text(size = 18),
+          axis.title.y = ggplot2::element_text(size = 18))
+
+
+
+# create a data frame in order to make a box-plot of k = 5
+graph2_data <- data.frame(output_rf_cv[[2]], iteration)
+colnames(graph2_data) <- c("MSE", "iteration")
+# plot the "MSE vs. Iterations" graph for k = 5
+ggplot2::ggplot(data = graph2_data, 
+       ggplot2::aes(x = iteration, y = MSE, group = iteration)) +
+  
+    ggplot2::geom_boxplot(size = 1, color = "cornflowerblue" ) +
+    
+    # set up the title of the graph
+    # lable the two axes
+    ggplot2::labs(title = "Estemiated CV MSE when k = 5",
+         x = "Number of Iterations", y = "MSE") +
+    
+    # change background color to black and white
+    ggplot2::theme_bw(base_size = 20) +
+  
+    # adjusting the size of the main title and its position
+    # adjust the size of titles of axes
+    ggplot2::theme(plot.title = ggplot2::element_text(size=20, hjust = 0.5), 
+          axis.title.x = ggplot2::element_text(size = 18),
+          axis.title.y = ggplot2::element_text(size = 18))
+
+
+
+# create a data frame in order to make a box-plot of k = 10
+graph3_data <- data.frame(output_rf_cv[[3]], iteration)
+colnames(graph3_data) <- c("MSE", "iteration")
+# plot the "MSE vs. Iterations" graph for k = 5
+ggplot2::ggplot(data = graph3_data, 
+       ggplot2::aes(x = iteration, y = MSE, group = iteration)) +
+  
+    ggplot2::geom_boxplot(size = 1, color = "cornflowerblue" ) +
+    
+    # set up the title of the graph
+    # lable the two axes
+    ggplot2::labs(title = "Estemiated CV MSE when k = 10",
+         x = "Number of Iterations", y = "MSE") +
+    
+    # change background color to black and white
+    ggplot2::theme_bw(base_size = 20) +
+  
+    # adjusting the size of the main title and its position
+    # adjust the size of titles of axes
+    ggplot2::theme(plot.title = ggplot2::element_text(size=20, hjust = 0.5), 
+          axis.title.x = ggplot2::element_text(size = 18),
+          axis.title.y = ggplot2::element_text(size = 18))
+
+```
+<br>
+<br>
+
+The above three boxplots show the CV estimated MSE of 30 iterations for k = 2, 5, 10.
+We can see that k = 2 has the highst MSE and medians of MSE, and the MSE of k = 10 are 
+relatively lower. Therefore, CV MSE decreases as the value of k increases and CV MSE is 
+minimized at k = 10.
+
+<br>

@@ -25,3 +25,4 @@ continent <- my_gapminder$continent
 my_lm(lifeExp ~ gdpPercap + continent, my_gapminder)
 
 }
+\keyword{inference}
