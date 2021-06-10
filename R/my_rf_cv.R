@@ -5,7 +5,7 @@
 #'   flipper_length_mm.
 #'
 #' @param k number of folds.
-#' @keywords prediction
+#' @keywords prediction, inference
 #'
 #' @return A numeric with the cross-validation error.
 #'

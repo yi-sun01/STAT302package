@@ -21,4 +21,5 @@ flipper_length_mm.
 my_rf_cv(5)
 
 }
-\keyword{prediction}
+\keyword{inference}
+\keyword{prediction,}

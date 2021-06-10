@@ -16,16 +16,110 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+## 1. Introduction
 
+This package includes 4 part of functions, which are:\
+
+my_t.test, A function can perform a one sample t test in R.\
+my_lm, A function can fit a linear model in R.\
+my_knn_cv,A function performs a k-neareast neighbors cross-validation\
+my_rf_cv, A function performs a random forest cross-validation\
+
+<br>
+
+To introduce each function of our package, we should first install the sample package:
+```{r, eval = FALSE}
+devtools::install_github("yi-sun01/STAT302package")
+```
+
+And then We load our packages and data we need:
 
 ```{r setup}
 library(STAT302package)
 data("my_penguins")
+data("my_gapminder")
 set.seed(302)
 ```
 
-## 4.Tutorial for my_knn_cv
+## 2.Tutorial for my_t.test
 
+This function can perform a one sample t test in R. So here, we use the "lifeExp" data from my_gapminder data set to test three different hypothesis about the mean of "lifeExp".
+<br>
+<br>
+In first situation, we set the null hypothesis as: mean of the lifeExp from gapminder data set is equal to 60, and the alternative hypothesis is that the mean of the data set is not equal to 60. We run my_t.test function, put the data, change the alternative parameter as "two.sided" and change the mu as 60 to perform this test and get a list of statistics about this test hypothesis:
+```{r}
+my_t.test(my_gapminder$lifeExp, "two.sided", 60)
+```
+From the list, We know the P value for this test is 0.09314, which is greater than our cut off p value 0.05. This comparison indicates that we fail to reject the null hypothesis and the mean of the lifeExp from the gapminder dataset is equal to 60. 
+<br>
+<br>
+In second situation, we set the null hypothesis as: mean of the lifeExp from gapminder data set is equal to 60, and the alternative hypothesis is that the mean of the data set is greater than 60. We run the my_t.test function, put the data, change the alternative parameter as "greater" and change the mu as 60 to perform this test and get a list of statistics about this test hypothesis:
+```{r}
+my_t.test(my_gapminder$lifeExp, "greater", 60)
+```
+We have our P value for this test is 0.95343. However, since this is a "greater" hypothesis test. So we need to use 1-0.95343 = 0.04657, this value to compare with the cut off value 0.05. Here is clear that our p value is less than the cut off value, so we reject the null hypothesis and have the evidence to support our alternative hypothesis: the mean of the data set is greater than 60.
+<br>
+<br>
+In third situation, we set the null hypothesis as: mean of the lifeExp from gapminder data set is equal to 60, and the alternative hypothesis is that the mean of the data set is less than 60. We run the my_t.test function, put the data, change the alternative parameter as "less" and change the mu as 60 to perform this test and get a list of statistics about this test hypothesis:
+```{r}
+my_t.test(my_gapminder$lifeExp, "less", 60)
+```
+We have our P value for this test is 0.04657, which is less than our cut off p value 0.05. This comparison indicates that we reject the null hypothesis and have the evidence to support our alternative hypothesis: the mean of lifeExp from the gapminder data set is less than 60.
+<br>
+<br>
+
+## 3.Tutorial for my_lm()
+
+<br>
+This function can fit a lieaner model in R. So here, We take the data from gapminder as example. We use "lifeExp" as response variable and "gdpPercap" and "continent" as explanatory variables. 
+<br>
+<br>
+First, we run the function and will get a summary data frame:
+```{r}
+my_lm(lifeExp ~ gdpPercap + continent, my_gapminder)
+```
+<br>
+Let's take the gdpPercap's estimate as example to explain how to interpret the Estimate statistic in this data frame. First, the Estimate here represents the coefficient for gdpPercap. It means when other covariates are identical, the expected difference in the response between two observations differing by one unit in X is 47.88852.
+<br>
+<br>
+Then we test a hypothesis test for the gadPercap coefficient. The null hypothesis is that the coefficient equals to zero. The alternative hypothesis is that the coefficient doesn't equal to zero. The Pr(>|t|)(which represent p value for the hypothesis test) for the gdpPercap is 2.478202e-98, which is mostly close to 0 and the cut off p value here is 0.05. So the P value for this hypothesis is less than the cut off p value. This comparison indicates that we reject the null hypothesis and have the evidence to support our alternative hypothesis: the coefficient doesn't equal to zero.
+<br>
+<br>
+Finally, let plot the  Actual vs. Fitted values:
+```{r, fig.dim = c(6, 5)}
+#load the package which we need in order to run ggplot
+#use matrix1 to store my_lm data statistics
+matrix1 <- my_lm(lifeExp ~ gdpPercap + continent, my_gapminder)
+
+#use real_lm to store lm() data statistics
+real_lm <- lm(lifeExp ~ gdpPercap + continent, data = my_gapminder)
+
+#calculate x and use x * estimate to get the actual value
+x <- model.matrix(lifeExp ~ gdpPercap + continent, data = my_gapminder)
+actual <- x %*% matrix1$Estimate
+
+#use mod_fits to store the fitted value
+mod_fits <- fitted(real_lm)
+#create a data frame to store the actual value and fitted value
+my_df01 <- data.frame(actual = actual , fitted = mod_fits)
+#plot the actual vs fitted graph 
+#using scatter plot to plot the graph 
+graph1 <- ggplot2::ggplot(my_df01, ggplot2::aes(x = fitted, y = actual)) +
+  ggplot2::geom_point() +
+  ggplot2::geom_abline(slope = 1, intercept = 0, col = "red", lty = 2) + 
+  ggplot2::theme_bw(base_size = 15) +
+  ggplot2::labs(x = "Fitted values", y = "Actual values", 
+               title = "Actual vs. Fitted")+
+  ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+graph1
+```
+
+From the graph, we can see that the function fit the real data value very well. Since all the points are plotted on the red line.
+<br>
+<br>
+<br>
+
+## 4.Tutorial for my_knn_cv
 
 We will be using "my_penguins" data and the function my_knn_cv() to perform 
 k-nearest neighbor cross-validation in this tutorial.
